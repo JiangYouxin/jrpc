@@ -1,0 +1,51 @@
+{
+    "name": "p2p-rpc",
+    "version": "0.0.1",
+    "description": "p2p-rpc is the server side of the p2prpc framework.",
+    "keywords": [
+        "javascript",
+        "server-routing",
+        "rpc",
+        "json-rpc"
+    ],
+    "maintainers": [
+        {
+            "name": "Jiang Youxin",
+            "email": "jiangyouxin9@gmail.com",
+            "url": "http://www.jiangyouxin.net"
+        }
+    ],
+    "bugs": {
+        "mail": "jiangyouxin9@gmail.com",
+        "url": "http://github.com/JiangYouxin/p2p-rpc/issues"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://github.com/JiangYouxin/p2p-rpc/blob/master/LICENSE.txt"
+        }
+    ],
+    "repository":
+        {
+            "type": "git",
+            "url": "https://github.com/JiangYouxin/p2p-rpc.git"
+        }
+    ,
+    "dependencies": {
+    },
+    "optionalDependencies": {
+    },
+    "devDependencies": {
+    },
+    "scripts": {
+        "test": "node test/testrunner.js"
+    },
+    "engines": [
+        "node >=0.6.x"
+    ],
+    "directories": {
+        "lib": "lib"
+    },
+    "main": "./lib/p2p-rpc"
+}
+
