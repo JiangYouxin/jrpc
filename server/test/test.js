@@ -1,6 +1,6 @@
 var assert = require('assert')
   , jrs = require('jsonrpc-serializer')
-  , Handler = require('../lib/p2p-rpc').Handler;
+  , Handler = require('../lib/p2p-rpc');
 
 function CheckRes (fn) {
   this.json = fn;
