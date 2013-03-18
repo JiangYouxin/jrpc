@@ -1,33 +1,31 @@
-var _ = require("underscore");
-
 exports.version = "0.0.1";
 
 exports.Handler = function() {
   var self = this;
 
-  self._auth = function(peerId, authInfo) {
+  var _auth = function(peerId, authInfo) {
     return true;
   }
 
-  self.auth = function(fn) {
-    self._auth = fn;
+  this.auth = function(fn) {
+    _auth = fn;
     return self;
   }
 
-  self._requests = {};
+  var _requests = {};
 
-  self._currentId = 0;
+  var _currentId = 0;
   
-  self._nextId = function() {
+  var _nextId = function() {
     return _currentId++;
   }
   
-  self.handler = function(req, res, next) {
+  this.handler = function(req, res, next) {
     if (req.type == "GET") {
       // TODO: handle Server Sent Events
     } else if (req.type == "POST") {
       var data = req.body;
-      if (!self._auth(data.params.peerId, data.params.authInfo)) {
+      if (!_auth(data.params.peerId, data.params.authInfo)) {
         onError(401, {
           code: -32000,
           message: "auth failed"
@@ -38,21 +36,21 @@ exports.Handler = function() {
         // the json-rpc id used by server & request-side client
         var id = data.id;
         // the json-rpc id used by server & response-side client
-        var alId = self._nextId();
+        var alId = _nextId();
         // the peerId of request-side client;
         var peerId = data.params.peerId;
         // the peerId of response-side client;
         var remoteId = data.params.remoteId;
         // TODO: notify the remote client
         if (id) {
-          _request[alId] = {
+          _requests[alId] = {
             peerId: peerId,
             remoteId: remoteId,
             fn: function(rawData) {
               onResult({
                 peerId: remoteId,
                 remoteId: peerId,
-                data: rawData
+                response: rawData
               });
             }
           };
@@ -60,9 +58,9 @@ exports.Handler = function() {
           onResult(true);
         }
       } else if (data.method == "response") {
-        var h = _request[data.params.data.id];
+        var h = _requests[data.params.id];
         if (h && h.remoteId == data.params.peerId && h.peerId == data.params.remoteId) {
-          h.fn(data.params.data);
+          h.fn(data.params.response);
           onResult(true);
         } else {
           onError(500, {

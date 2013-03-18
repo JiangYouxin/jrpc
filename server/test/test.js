@@ -1,0 +1,46 @@
+var assert = require('assert')
+  , jrs = require('jsonrpc-serializer')
+  , Handler = require('../lib/p2p-rpc').Handler;
+
+function CheckRes (fn) {
+  this.json = fn;
+}
+
+function mockPost(jstring) {
+  return {
+    type: "POST",
+    body: JSON.parse(jstring)
+  }
+}
+
+describe('simple-call', function() {
+  var handler = new Handler().handler;
+  describe('request', function() {
+    var req = jrs.request('test_id', 'request', {
+      peerId: "id1",
+      remoteId: "id2",
+      authInfo: null,
+      request: "Hello World"
+    });
+    handler(mockPost(req), new CheckRes(function(code, data) {
+      assert.equal(code, 200);
+      assert.equal(data.id, 'test_id');
+      assert.equal(data.result.peerId, 'id2');
+      assert.equal(data.result.remoteId, 'id1');
+      assert.equal(data.result.response, 'Hello Sb!');
+    }));
+  });
+  describe('response', function() {
+    var req = jrs.notification('response', {
+      peerId: "id2",
+      remoteId: "id1",
+      authInfo: null,
+      id: 0,
+      response: "Hello Sb!"
+    });
+    handler(mockPost(req), new CheckRes(function(code, data) {
+      assert.equal(code, 200);
+      assert.equal(data.result, true);
+    }));
+  });
+});

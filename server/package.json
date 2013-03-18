@@ -32,13 +32,15 @@
         }
     ,
     "dependencies": {
+        "jsonrpc-serializer": "0.1.1"
     },
     "optionalDependencies": {
     },
     "devDependencies": {
+        "mocha": "1.7.4"
     },
     "scripts": {
-        "test": "node test/testrunner.js"
+        "test": "mocha"
     },
     "engines": [
         "node >=0.6.x"
