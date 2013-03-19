@@ -32,7 +32,7 @@
         }
     ,
     "dependencies": {
-        "jsonrpc-serializer": "0.1.1"
+        "jsonrpc-serializer": "0.1.2"
     },
     "optionalDependencies": {
     },
