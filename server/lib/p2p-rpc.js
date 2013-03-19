@@ -1,3 +1,5 @@
+var sse = require('./sse');
+
 module.exports = function() {
   function _auth(peerId, authInfo) {
     return true;
@@ -10,6 +12,7 @@ module.exports = function() {
   }
 
   var _requests = {};
+  var _longConns = {};
 
   var _currentId = 0;
   
@@ -33,6 +36,13 @@ module.exports = function() {
     });
   }
 
+  function _handleLongConn(peerId, res) {
+    // TODO: timeout
+    _longConns[peerId] = function(data) {
+      sse.send(data, res.send);
+    };
+  }
+
   function _handleRequest(data, res) {
     // the json-rpc id used by server & request-side client
     var id = data.id;
@@ -42,7 +52,27 @@ module.exports = function() {
     var peerId = data.params.peerId;
     // the peerId of response-side client;
     var remoteId = data.params.remoteId;
-    // TODO: notify the remote client
+
+    var fn = _longConns[remoteId];
+    if (!fn) {
+      _sendError(res, 500, id, {
+        code: -32002,
+        message: "Remote not exist or not online."
+      });
+      return;
+    }
+    fn(JSON.stringify({
+      jsonrpc: '2.0',
+      id: id,
+      method: 'forward_request',
+      params: {
+        peerId: peerId,
+        remoteId: remoteId,
+        request: data.params.request
+      }
+    }));
+
+    // TODO: timeout
     if (id) {
       _requests[alId] = {
         peerId: peerId,
@@ -81,7 +111,7 @@ module.exports = function() {
       if (!_auth(data.params.peerId, data.params.authInfo)) {
         _sendError(res, 401, data.id, {
           code: -32000,
-          message: "auth failed"
+          message: "auth failed."
         });
       } else if (data.method == "request") {
         _handleRequest(data, res);
