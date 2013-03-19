@@ -1,6 +1,7 @@
 var assert = require('assert')
   , jrs = require('jsonrpc-serializer')
-  , Handler = require('../lib/p2p-rpc');
+  , Handler = require('../lib/p2p-rpc')
+  , sse = require('../lib/sse');
 
 function CheckRes (fn) {
   this.json = fn;
@@ -12,6 +13,27 @@ function mockPost(jstring) {
     body: JSON.parse(jstring)
   }
 }
+
+describe('sse', function() {
+  var cases = [
+    'oh my god',
+    'oh my god\noh my baby',
+    'oh my god\noh my baby\n'
+  ];
+  it('#send & #parse', function(done) {
+    var finished = 0;
+    for (var i in cases) {
+      (function(c) {
+        sse.send(c, function(data) {
+          assert.equal(sse.parse(data), c);
+          finished++;
+          if (finished == cases.length)
+            done();
+        });
+      })(cases[i]);
+    }
+  });
+});
 
 describe('simple-rpc-call', function() {
   var handler = new Handler().handler;
