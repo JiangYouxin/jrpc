@@ -3,15 +3,28 @@ var assert = require('assert')
   , Handler = require('../lib/p2p-rpc')
   , sse = require('../lib/sse');
 
-function CheckRes (fn) {
+function CheckRes(fn) {
   this.json = fn;
+}
+
+function CheckSseRes(fn) {
+  this.send = fn;
 }
 
 function mockPost(jstring) {
   return {
     type: "POST",
     body: JSON.parse(jstring)
-  }
+  };
+}
+
+function mockGet(jstring) {
+  return {
+    type: "GET",
+    query: {
+      q: jstring
+    }
+  };
 }
 
 describe('sse', function() {
@@ -39,30 +52,58 @@ describe('simple-rpc-call', function() {
   var handler = new Handler().handler;
   describe('request & response', function() {
     it('should receive a reponse', function(done) {
+      var resCount = 0;
+
+      // peerId: id2, recv request & send response
+      var longReq = jrs.notification('wait_request', {
+        peerId: 'id2',
+        authInfo: null
+      });
+
+      handler(mockGet(longReq), new CheckSseRes(function(data) {
+        var obj = jrs.deserialize(sse.parse(data));
+        assert.equal(obj.type, 'notification');
+        assert.equal(obj.payload.method, 'forward_request');
+        assert.equal(obj.payload.params.peerId, 'id1');
+        assert.equal(obj.payload.params.remoteId, 'id2');
+        assert.equal(obj.payload.params.request, 'Hello World!');
+        resCount++;
+
+        var res = jrs.notification('response', {
+          peerId: 'id2',
+          remoteId: 'id1',
+          authInfo: null,
+          id: obj.payload.params.id,
+          response: 'Hello Sb!'
+        });
+
+        handler(mockPost(res), new CheckRes(function(code, data) {
+          assert.equal(code, 200);
+          var obj = jrs.deserializeObject(data);
+          assert.equal(obj.type, 'notification');
+          assert.equal(obj.payload.method, 'responseSuccess'); 
+          if (++resCount == 3)
+            done();
+        }));
+      }));
+
+      // peerId: id1, send request & recv response
       var req = jrs.request('test_id', 'request', {
         peerId: "id1",
         remoteId: "id2",
         authInfo: null,
-        request: "Hello World"
+        request: "Hello World!"
       });
       handler(mockPost(req), new CheckRes(function(code, data) {
         assert.equal(code, 200);
-        assert.equal(data.id, 'test_id');
-        assert.equal(data.result.peerId, 'id2');
-        assert.equal(data.result.remoteId, 'id1');
-        assert.equal(data.result.response, 'Hello Sb!');
-        done();
-      }));
-      var res = jrs.notification('response', {
-        peerId: "id2",
-        remoteId: "id1",
-        authInfo: null,
-        id: 0,
-        response: "Hello Sb!"
-      });
-      handler(mockPost(res), new CheckRes(function(code, data) {
-        assert.equal(code, 200);
-        assert.equal(data.result, true);
+        var obj = jrs.deserializeObject(data);
+        assert.equal(obj.type, 'success');
+        assert.equal(obj.payload.id, 'test_id');
+        assert.equal(obj.payload.result.peerId, 'id2');
+        assert.equal(obj.payload.result.remoteId, 'id1');
+        assert.equal(obj.payload.result.response, 'Hello Sb!');
+        if (++resCount == 3)
+          done();
       }));
     });
   });

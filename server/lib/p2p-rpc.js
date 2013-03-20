@@ -1,4 +1,5 @@
-var sse = require('./sse');
+var sse = require('./sse')
+  , jrs = require('jsonrpc-serializer');
 
 module.exports = function() {
   function _auth(peerId, authInfo) {
@@ -20,32 +21,15 @@ module.exports = function() {
     return _currentId++;
   }
  
-  function _sendResult(res, id, result) {
-    res.json(200, {
-      jsonrpc: '2.0',
-      result: result,
-      id: id
-    });
-  }
-
-  function _sendError(res, code, id, error) {
-    res.json(code, {
-      jsonrpc: '2.0',
-      error: error,
-      id: id
-    });
-  }
-
   function _handleLongConn(peerId, res) {
-    // TODO: timeout
+    // TODO: timeout & close
+    // TODO: HTTP 200
     _longConns[peerId] = function(data) {
       sse.send(data, res.send);
     };
   }
 
-  function _handleRequest(data, res) {
-    // the json-rpc id used by server & request-side client
-    var id = data.id;
+  function _handleRequest(type, data, res) {
     // the json-rpc id used by server & response-side client
     var alId = _nextId();
     // the peerId of request-side client;
@@ -55,77 +39,93 @@ module.exports = function() {
 
     var fn = _longConns[remoteId];
     if (!fn) {
-      _sendError(res, 500, id, {
-        code: -32002,
-        message: "Remote not exist or not online."
-      });
+      if (type == 'request') {
+        res.json(200, jrs.errorObject(data.id, {
+          code: -32001,
+          message: "Remote not online."
+        }));
+      } else {
+        res.json(200, jrs.notificationObject('notificationFailed'));
+      }
       return;
     }
-    fn(JSON.stringify({
-      jsonrpc: '2.0',
-      id: id,
-      method: 'forward_request',
-      params: {
-        peerId: peerId,
-        remoteId: remoteId,
-        request: data.params.request
-      }
-    }));
 
+    // reply to peerId
     // TODO: timeout
-    if (id) {
+    if (type == 'request') {
       _requests[alId] = {
         peerId: peerId,
         remoteId: remoteId,
-        fn: function(rawData) {
-          _sendResult(res, data.id, {
+        fn: function(response) {
+          res.json(200, jrs.successObject(data.id, {
             peerId: remoteId,
             remoteId: peerId,
-            response: rawData
-          });
+            response: response
+          }));
         }
       };
     } else {
-      _sendResult(res, null, true);
+      res.json(200, jrs.notificationObject('notificationSuccess'));
     }
+
+    // forward request || notification to remoteId
+    fn(jrs.notification('forward_' + type, {
+        peerId: peerId,
+        remoteId: remoteId,
+        id: alId,
+        request: data.params.request
+    }));
   } 
 
-  function _handleResponse(data, res) {
-    var h = _requests[data.params.id];
-    if (h && h.remoteId == data.params.peerId && h.peerId == data.params.remoteId) {
-      h.fn(data.params.response);
-      _sendResult(res, null, true);
+  function _handleResponse(params, res) {
+    // TODO remoteId & response must be present
+    var h = _requests[params.id];
+
+    if (h && h.remoteId == params.peerId && h.peerId == params.remoteId) {
+      // forward response to remoteId
+      h.fn(params.response);
+      res.json(200, jrs.notificationObject('responseSuccess'));
     } else {
-      _sendErr(res, 500, null, {
-        code: -32001,
-        message: "Request not exists."
-      });
+      res.json(200, jrs.notificationObject('responseFailed'));
     } 
   }
 
   this.handler = function(req, res, next) {
-    if (req.type == "GET") {
-      // TODO: handle Server Sent Events
-    } else if (req.type == "POST") {
-      var data = req.body;
-      if (!_auth(data.params.peerId, data.params.authInfo)) {
-        _sendError(res, 401, data.id, {
-          code: -32000,
-          message: "auth failed."
-        });
-      } else if (data.method == "request") {
-        _handleRequest(data, res);
-      } else if (data.method == "response") {
-        _handleResponse(data, res);
-      } else {
-        _sendError(res, 500, data.id, {
-          code: -32601,
-          message: "Method not found."
-        });
-      }
-      return;
+    var rpcReq;
+
+    if (req.type == 'GET') {
+      rpcReq = jrs.deserialize(req.query.q);
+    } else if (req.type == 'POST') {
+      rpcReq = jrs.deserializeObject(req.body);
     } else {
       next();
+      return;
     }
-  }
+
+    if (rpcReq.type == 'request' || rpcReq.type == 'notification') {
+      // TODO: peerId & authInfo must be present
+      var params = rpcReq.payload.params;
+      if (!_auth(params.peerId, params.authInfo)) {
+        res.json(401, 'auth failed');
+        return;
+      }
+
+      if (rpcReq.payload.method == 'request') {
+        _handleRequest(rpcReq.type, rpcReq.payload, res);
+      } else if (rpcReq.payload.method == 'response') {
+        // TODO: type must be notification
+        _handleResponse(params, res);
+      } else if (rpcReq.payload.method == 'wait_request') {
+        // TODO: type must be notification
+        // TODO: peerId must be present
+        _handleLongConn(params.peerId, res);
+      } else {
+        // TODO: return json-rpc error
+        res.json(404, 'method not found');
+      }
+    } else {
+      // TODO: return json-rpc error
+      res.json(404, 'method not found');
+    }
+  };
 }
