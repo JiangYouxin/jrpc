@@ -155,10 +155,6 @@ describe('invalid_request', function() {
       request: 'request'
     }),
     jrs.request('test_id', 'request', {
-      peerId: 'peerId',
-      remoteId: 'remoteId'
-    }),
-    jrs.request('test_id', 'request', {
       remoteId: 'remoteId',
       request: 'request'
     }),
@@ -171,6 +167,25 @@ describe('invalid_request', function() {
       peerId: 'peerId',
       remoteId: ['remoteId'],
       request: 'request'
+    }),
+    jrs.notification('response', 'HelloWorld'),
+    jrs.notification('test_id', 'response', {
+      peerId: 'peerId',
+      response: 'response'
+    }),
+    jrs.notification('response', {
+      remoteId: 'remoteId',
+      response: 'response'
+    }),
+    jrs.notification('response', {
+      peerId: ['peerId'],
+      remoteId: 'remoteId',
+      response: 'response'
+    }),
+    jrs.notification('response', {
+      peerId: 'peerId',
+      remoteId: ['remoteId'],
+      response: 'response'
     })
   ];
   var fns = [mockGet, mockPost];

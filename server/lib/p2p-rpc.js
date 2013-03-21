@@ -37,6 +37,11 @@ module.exports = function() {
     // the peerId of response-side client;
     var remoteId = data.params.remoteId;
 
+    if (typeof(peerId) != 'string' || typeof(remoteId) != 'string') {
+      res.json(403, 'peerId or remoteId is not present or not a string');
+      return;
+    }
+
     var fn = _longConns[remoteId];
     if (!fn) {
       if (type == 'request') {
@@ -78,6 +83,19 @@ module.exports = function() {
   } 
 
   function _handleResponse(params, res) {
+    var id = params.id;
+    var remoteId = params.remoteId;
+    var peerId = params.peerId;
+
+    if (typeof(id) != 'number') {
+      res.json(403, 'id is not present or not a number');
+      return;
+    }
+    if (typeof(peerId) != 'string' || typeof(remoteId) != 'string') {
+      res.json(403, 'peerId or remoteId is not present or not a string');
+      return;
+    }
+
     // TODO remoteId & response must be present
     var h = _requests[params.id];
 
@@ -103,7 +121,6 @@ module.exports = function() {
     }
 
     if (rpcReq.type == 'request' || rpcReq.type == 'notification') {
-      // TODO: peerId & authInfo must be present
       var params = rpcReq.payload.params;
       if (!_auth(params.peerId, params.authInfo)) {
         res.json(401, 'auth failed');
@@ -120,12 +137,10 @@ module.exports = function() {
         // TODO: peerId must be present
         _handleLongConn(params.peerId, res);
       } else {
-        // TODO: return json-rpc error
-        res.json(404, 'method not found');
+        res.json(404, 'Not found');
       }
     } else {
-      // TODO: return json-rpc error
-      res.json(404, 'method not found');
+      res.json(404, 'Not found');
     }
   };
 }
