@@ -148,7 +148,30 @@ describe('invalid_request', function() {
     jrs.request('test_id', 'HelloWorld', ['Oh my baby']),
     jrs.notification('HelloWorld', ['Oh my baby']),
     jrs.success('test_id', ['Oh my baby']),
-    JSON.stringify(jrs.errorObject('test_id', { code: -32000, message: 'oh my baby' }))
+    JSON.stringify(jrs.errorObject('test_id', { code: -32000, message: 'oh my baby' })),
+    jrs.request('test_id', 'request', 'HelloWorld'),
+    jrs.request('test_id', 'request', {
+      peerId: 'peerId',
+      request: 'request'
+    }),
+    jrs.request('test_id', 'request', {
+      peerId: 'peerId',
+      remoteId: 'remoteId'
+    }),
+    jrs.request('test_id', 'request', {
+      remoteId: 'remoteId',
+      request: 'request'
+    }),
+    jrs.request('test_id', 'request', {
+      peerId: ['peerId'],
+      remoteId: 'remoteId',
+      request: 'request'
+    }),
+    jrs.request('test_id', 'request', {
+      peerId: 'peerId',
+      remoteId: ['remoteId'],
+      request: 'request'
+    })
   ];
   var fns = [mockGet, mockPost];
   for (var i in reqs) {
