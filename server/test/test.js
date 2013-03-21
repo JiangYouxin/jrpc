@@ -284,15 +284,13 @@ describe('auth', function() {
   var fns = [mockGet, mockPost];
   describe('#1', function() {
     for (var i in reqs) {
-      var req = reqs[i];
       for (var j in fns) {
-        var fn = fns[j];
-        it('should be rejected', function(done) {
+        (function(fn, req) { it('should be rejected', function(done) {
           handler(fn(req), new CheckRes(function(code, data) {
             assert.equal(code, 401);
             done();
           }));
-        });
+        });})(fns[j], reqs[i]);
       };
     }
   });
