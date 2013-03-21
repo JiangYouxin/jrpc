@@ -13,14 +13,14 @@ function CheckSseRes(fn) {
 
 function mockPost(jstring) {
   return {
-    type: "POST",
+    type: 'POST',
     body: JSON.parse(jstring)
   };
 }
 
 function mockGet(jstring) {
   return {
-    type: "GET",
+    type: 'GET',
     query: {
       q: jstring
     }
@@ -57,7 +57,6 @@ describe('simple-rpc-call', function() {
       // peerId: id2, recv request & send response
       var longReq = jrs.notification('wait_request', {
         peerId: 'id2',
-        authInfo: null
       });
 
       handler(mockGet(longReq), new CheckSseRes(function(data) {
@@ -72,7 +71,6 @@ describe('simple-rpc-call', function() {
         var res = jrs.notification('response', {
           peerId: 'id2',
           remoteId: 'id1',
-          authInfo: null,
           id: obj.payload.params.id,
           response: 'Hello Sb!'
         });
@@ -91,7 +89,6 @@ describe('simple-rpc-call', function() {
       var req = jrs.request('test_id', 'request', {
         peerId: "id1",
         remoteId: "id2",
-        authInfo: null,
         request: "Hello World!"
       });
       handler(mockPost(req), new CheckRes(function(code, data) {
@@ -107,6 +104,31 @@ describe('simple-rpc-call', function() {
       }));
     });
   });
+});
+
+describe('invalid_request', function() {
+  var handler = new Handler().handler;
+  var reqs = [
+    JSON.stringify({ admire: 'Hello World' }),
+    jrs.request('test_id', 'HelloWorld', ['Oh my baby']),
+    jrs.notification('HelloWorld', ['Oh my baby']),
+    jrs.success('test_id', ['Oh my baby']),
+    JSON.stringify(jrs.errorObject('test_id', { code: -32000, message: 'oh my baby' }))
+  ];
+  var fns = [mockGet, mockPost];
+  for (var i in reqs) {
+    var req = reqs[i];
+    console.log(req);
+    for (var j in fns) {
+      var fn = fns[j];
+      it ('request' + i + ':' + j, function(done) {
+        handler(fn(req), new CheckRes(function(code, data) {
+          assert.notEqual(code, 200);
+          done();
+        }));
+      });
+    }
+  }
 });
 
 describe('auth', function() {
