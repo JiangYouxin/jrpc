@@ -99,7 +99,7 @@ describe('simple-rpc-call', function() {
         assert.equal(obj.payload.method, 'forward_notification');
         assert.equal(obj.payload.params.peerId, 'id1');
         assert.equal(obj.payload.params.remoteId, 'id3');
-        assert.equal(obj.payload.params.notification, 'Admire You');
+        assert.equal(obj.payload.params.request, 'Admire You');
         resCount++;
         checkDone();
       }));
@@ -123,17 +123,17 @@ describe('simple-rpc-call', function() {
         checkDone();
       }));
 
-      var req2 = jrs.notification('notification', {
+      var req2 = jrs.notification('request', {
         peerId: 'id1',
         remoteId: 'id3',
-        notification: 'Admire You'
+        request: 'Admire You'
       });
 
       handler(mockPost(req2), new CheckRes(function(code, data) {
         assert.equal(code, 200);
         var obj = jrs.deserializeObject(data);
         assert.equal(obj.type, 'notification');
-        assert.equal(obj.method, 'forwardSuccess');
+        assert.equal(obj.payload.method, 'notificationSuccess');
         resCount++;
         checkDone();
       }));
