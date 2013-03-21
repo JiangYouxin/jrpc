@@ -96,10 +96,10 @@ module.exports = function() {
       return;
     }
 
-    // TODO remoteId & response must be present
     var h = _requests[params.id];
 
     if (h && h.remoteId == params.peerId && h.peerId == params.remoteId) {
+      delete _requests[params.id];
       // forward response to remoteId
       h.fn(params.response);
       res.json(200, jrs.notificationObject('responseSuccess'));

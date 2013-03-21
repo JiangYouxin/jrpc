@@ -54,7 +54,7 @@ describe('simple-rpc-call', function() {
     it('should receive a reponse', function(done) {
       var resCount = 0;
       function checkDone() {
-        if (resCount == 5)
+        if (resCount == 6)
           done();
       }
       // peerId: id2, recv request & send response
@@ -82,7 +82,16 @@ describe('simple-rpc-call', function() {
           assert.equal(code, 200);
           var obj = jrs.deserializeObject(data);
           assert.equal(obj.type, 'notification');
-          assert.equal(obj.payload.method, 'responseSuccess'); 
+          assert.equal(obj.payload.method, 'responseSuccess');
+          resCount++;
+          checkDone();
+        }));
+
+        handler(mockPost(res), new CheckRes(function(code, data) {
+          assert.equal(code, 200);
+          var obj = jrs.deserializeObject(data);
+          assert.equal(obj.type, 'notification');
+          assert.equal(obj.payload.method, 'responseFailed');
           resCount++;
           checkDone();
         }));
