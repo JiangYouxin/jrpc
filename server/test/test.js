@@ -53,10 +53,13 @@ describe('simple-rpc-call', function() {
   describe('request & response', function() {
     it('should receive a reponse', function(done) {
       var resCount = 0;
-
+      function checkDone() {
+        if (resCount == 5)
+          done();
+      }
       // peerId: id2, recv request & send response
       var longReq = jrs.notification('wait_request', {
-        peerId: 'id2',
+        peerId: 'id2'
       });
 
       handler(mockGet(longReq), new CheckSseRes(function(data) {
@@ -80,17 +83,34 @@ describe('simple-rpc-call', function() {
           var obj = jrs.deserializeObject(data);
           assert.equal(obj.type, 'notification');
           assert.equal(obj.payload.method, 'responseSuccess'); 
-          if (++resCount == 3)
-            done();
+          resCount++;
+          checkDone();
         }));
+      }));
+
+      // peerId: id3, recv notification
+      var longReq2 = jrs.notification('wait_request', {
+        peerId: 'id3'
+      });
+
+      handler(mockGet(longReq2), new CheckSseRes(function(data) {
+        var obj = jrs.deserialize(sse.parse(data));
+        assert.equal(obj.type, 'notification');
+        assert.equal(obj.payload.method, 'forward_notification');
+        assert.equal(obj.payload.params.peerId, 'id1');
+        assert.equal(obj.payload.params.remoteId, 'id3');
+        assert.equal(obj.payload.params.notification, 'Admire You');
+        resCount++;
+        checkDone();
       }));
 
       // peerId: id1, send request & recv response
       var req = jrs.request('test_id', 'request', {
-        peerId: "id1",
-        remoteId: "id2",
-        request: "Hello World!"
+        peerId: 'id1',
+        remoteId: 'id2',
+        request: 'Hello World!'
       });
+
       handler(mockPost(req), new CheckRes(function(code, data) {
         assert.equal(code, 200);
         var obj = jrs.deserializeObject(data);
@@ -99,8 +119,23 @@ describe('simple-rpc-call', function() {
         assert.equal(obj.payload.result.peerId, 'id2');
         assert.equal(obj.payload.result.remoteId, 'id1');
         assert.equal(obj.payload.result.response, 'Hello Sb!');
-        if (++resCount == 3)
-          done();
+        resCount++;
+        checkDone();
+      }));
+
+      var req2 = jrs.notification('notification', {
+        peerId: 'id1',
+        remoteId: 'id3',
+        notification: 'Admire You'
+      });
+
+      handler(mockPost(req2), new CheckRes(function(code, data) {
+        assert.equal(code, 200);
+        var obj = jrs.deserializeObject(data);
+        assert.equal(obj.type, 'notification');
+        assert.equal(obj.method, 'forwardSuccess');
+        resCount++;
+        checkDone();
       }));
     });
   });
@@ -118,7 +153,6 @@ describe('invalid_request', function() {
   var fns = [mockGet, mockPost];
   for (var i in reqs) {
     var req = reqs[i];
-    console.log(req);
     for (var j in fns) {
       var fn = fns[j];
       it ('request' + i + ':' + j, function(done) {
