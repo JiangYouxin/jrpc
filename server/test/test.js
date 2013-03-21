@@ -144,11 +144,14 @@ describe('simple-rpc-call', function() {
 describe('invalid_request', function() {
   var handler = new Handler().handler;
   var reqs = [
+    // bad requests
     JSON.stringify({ admire: 'Hello World' }),
     jrs.request('test_id', 'HelloWorld', ['Oh my baby']),
     jrs.notification('HelloWorld', ['Oh my baby']),
     jrs.success('test_id', ['Oh my baby']),
     JSON.stringify(jrs.errorObject('test_id', { code: -32000, message: 'oh my baby' })),
+
+    // bad forward requests
     jrs.request('test_id', 'request', 'HelloWorld'),
     jrs.request('test_id', 'request', {
       peerId: 'peerId',
@@ -168,26 +171,65 @@ describe('invalid_request', function() {
       remoteId: ['remoteId'],
       request: 'request'
     }),
+
+    // bad forward notifications
+    jrs.notification('request', 'HelloWorld'),
+    jrs.notification('request', {
+      peerId: 'peerId',
+      request: 'request'
+    }),
+    jrs.notification('request', {
+      remoteId: 'remoteId',
+      request: 'request'
+    }),
+    jrs.notification('request', {
+      peerId: ['peerId'],
+      remoteId: 'remoteId',
+      request: 'request'
+    }),
+    jrs.notification('request', {
+      peerId: 'peerId',
+      remoteId: ['remoteId'],
+      request: 'request'
+    }),
+
+    // bad responses
     jrs.notification('response', 'HelloWorld'),
     jrs.notification('test_id', 'response', {
+      id: 12345,
       peerId: 'peerId',
       response: 'response'
     }),
     jrs.notification('response', {
+      id: 12345,
       remoteId: 'remoteId',
       response: 'response'
     }),
     jrs.notification('response', {
+      id: 12345,
       peerId: ['peerId'],
       remoteId: 'remoteId',
       response: 'response'
     }),
     jrs.notification('response', {
+      id: 12345,
       peerId: 'peerId',
       remoteId: ['remoteId'],
       response: 'response'
+    }),
+    jrs.notification('response', {
+      peerId: 'peerId',
+      remoteId: 'remoteId',
+      response: 'response'
+    }),
+    jrs.notification('response', {
+      id: '12345',
+      peerId: 'peerId',
+      remoteId: 'remoteId',
+      response: 'response'
     })
   ];
+
   var fns = [mockGet, mockPost];
   for (var i in reqs) {
     var req = reqs[i];
