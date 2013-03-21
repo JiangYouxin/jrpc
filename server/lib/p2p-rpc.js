@@ -130,10 +130,16 @@ module.exports = function() {
       if (rpcReq.payload.method == 'request') {
         _handleRequest(rpcReq.type, rpcReq.payload, res);
       } else if (rpcReq.payload.method == 'response') {
-        // TODO: type must be notification
+        if (rpcReq.type != 'notification') {
+          res.json(403, 'type is not notification');
+          return;
+        }
         _handleResponse(params, res);
       } else if (rpcReq.payload.method == 'wait_request') {
-        // TODO: type must be notification
+        if (rpcReq.type != 'notification') {
+          res.json(403, 'type is not notification');
+          return;
+        }
         if (typeof(params.peerId) != 'string') {
           res.json(403, 'peerId is not present or not a string');
           return;
