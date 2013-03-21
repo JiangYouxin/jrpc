@@ -11,20 +11,35 @@ function CheckSseRes(fn) {
   this.send = fn;
 }
 
-function mockPost(jstring) {
-  return {
-    type: 'POST',
-    body: JSON.parse(jstring)
+function addCloseEvent(obj) {
+  obj.on = function(e, fn) {
+    if (e == 'close')
+      this.fn = fn;
+  };
+  obj.disConn = function() {
+    if (this.fn)
+      this.fn();
   };
 }
 
+function mockPost(jstring) {
+  var obj = {
+    type: 'POST',
+    body: JSON.parse(jstring)
+  };
+  addCloseEvent(obj);
+  return obj;
+}
+
 function mockGet(jstring) {
-  return {
+  var obj = {
     type: 'GET',
     query: {
       q: jstring
     }
   };
+  addCloseEvent(obj);
+  return obj;
 }
 
 describe('sse', function() {
