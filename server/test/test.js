@@ -113,18 +113,37 @@ describe('auth', function() {
   var handler = new Handler().auth(function(id, authInfo) {
     return id == authInfo;
   }).handler;
+  var reqs = [
+    jrs.request('test_id', 'request', {
+      peerId: 'id1',
+      remoteId: 'id2',
+      authInfo: 'id001',
+      request: 'Hello World'
+    }),
+    jrs.notification('response', {
+      peerId: 'id1',
+      remoteId: 'id2',
+      authInfo: 'id001',
+      response: 'Hello Sb'
+    }),
+    jrs.notification('wait_request', {
+      peerId: 'id1',
+      authInfo: 'id001'
+    })
+  ];
+  var fns = [mockGet, mockPost];
   describe('#1', function() {
-    it('should be rejected', function(done) {
-      var req = jrs.request('test_id', 'request', {
-        peerId: "id1",
-        remoteId: "id2",
-        authInfo: "id001",
-        request: "Hello World"
-      });
-      handler(mockPost(req), new CheckRes(function(code, data) {
-        assert.equal(code, 401);
-        done();
-      }));
-    });
+    for (var i in reqs) {
+      var req = reqs[i];
+      for (var j in fns) {
+        var fn = fns[j];
+        it('should be rejected', function(done) {
+          handler(fn(req), new CheckRes(function(code, data) {
+            assert.equal(code, 401);
+            done();
+          }));
+        });
+      };
+    }
   });
 });
