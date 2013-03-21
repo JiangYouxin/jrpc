@@ -194,8 +194,14 @@ describe('invalid_request', function() {
     }),
 
     // bad responses
+    jrs.request('test_id', 'response', {
+      id: 12345,
+      peerId: 'peerId',
+      remoteId: 'remoteId',
+      response: 'response'
+    }),
     jrs.notification('response', 'HelloWorld'),
-    jrs.notification('test_id', 'response', {
+    jrs.notification('response', {
       id: 12345,
       peerId: 'peerId',
       response: 'response'
@@ -227,20 +233,28 @@ describe('invalid_request', function() {
       peerId: 'peerId',
       remoteId: 'remoteId',
       response: 'response'
+    }),
+
+    // bad wait requests
+    jrs.request('test_id', 'wait_request', {
+      peerId: 'peerId'
+    }),
+    jrs.notification('wait_request', 'peerId'),
+    jrs.notification('wait_request', {}),
+    jrs.notification('wait_request', {
+      peerId: ['peerId']
     })
   ];
 
   var fns = [mockGet, mockPost];
   for (var i in reqs) {
-    var req = reqs[i];
     for (var j in fns) {
-      var fn = fns[j];
-      it ('request' + i + ':' + j, function(done) {
+      (function(fn, req) { it (req, function(done) {
         handler(fn(req), new CheckRes(function(code, data) {
           assert.notEqual(code, 200);
           done();
         }));
-      });
+      });})(fns[j], reqs[i]);
     }
   }
 });

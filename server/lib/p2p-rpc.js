@@ -134,7 +134,10 @@ module.exports = function() {
         _handleResponse(params, res);
       } else if (rpcReq.payload.method == 'wait_request') {
         // TODO: type must be notification
-        // TODO: peerId must be present
+        if (typeof(params.peerId) != 'string') {
+          res.json(403, 'peerId is not present or not a string');
+          return;
+        }
         _handleLongConn(params.peerId, res);
       } else {
         res.json(404, 'Not found');
