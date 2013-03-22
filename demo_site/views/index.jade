@@ -4,6 +4,24 @@ block content
   h1= title
   p Welcome to #{title}
   p
+    span My Id is:
+    span#peerId
+  p
+    span RemoteId:
     input#remoteId
-    button Call!
-  script
+    button#call Call!
+  p#result
+  script(type='text/javascript')
+    $(function() {
+      var peerId = (function(n) {
+        var r = "";
+        var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (var i = 0; i < n; i++) 
+          r = r + possible.charAt(Math.floor(Math.random() * possible.length));
+        return r;
+      })(20);
+      $('#peerId').text(peerId);
+      $('#call').click(function() {
+        $('#result').text('not support yet');
+      });
+    });
