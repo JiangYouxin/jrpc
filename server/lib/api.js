@@ -29,7 +29,7 @@ module.exports = function(peerId, d) {
       else {
         var obj = jrs.deserializeObject(result);
         if (obj.type == 'success')
-          fn(null, obj.payload.result);
+          fn(null, obj.payload.result.response.result);
         else
           fn(obj.payload.error, null);
       }
