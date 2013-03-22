@@ -19,7 +19,7 @@ module.exports = function(peerId, d) {
   this.request = function(remoteId, method, params, fn) {
     var inner = jrs.requestObject(++_id, method, params);
     var req = jrs.requestObject(_id, 'request', {
-      peerId: d.peerId,
+      peerId: peerId,
       remoteId: remoteId,
       request: inner
     });
@@ -39,7 +39,7 @@ module.exports = function(peerId, d) {
   this.notification = function(remoteId, method, params) {
     var inner = jrs.notificationObject(method, params);
     var req = jrs.notificationObject('request', {
-      peerId: d.peerId,
+      peerId: peerId,
       remoteId: remoteId,
       request: inner
     });
@@ -59,7 +59,7 @@ module.exports = function(peerId, d) {
           ? jrs.errorObject(inner.payload.id, err)
           : jrs.successObject(inner.payload.id, result);
         var response = jrs.notification('response', {
-          peerId: d.peerId,
+          peerId: peerId,
           remoteId: obj.payload.params.peerId,
           id: obj.payload.params.id,
           response: innerReply
