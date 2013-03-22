@@ -52,7 +52,7 @@ module.exports = function(peerId, d) {
 
     var reply = function(err, result) {};
     if (obj.payload.method == 'forward_request') {
-      if (inner.payload.method != 'request')
+      if (inner.type != 'request')
         return;
       reply = function(err, result) {
         var innerReply = err
@@ -67,7 +67,7 @@ module.exports = function(peerId, d) {
         d.send(response);
       };
     } else if (obj.payload.method == 'forward_notification') {
-      if (inner.payload.method != 'notification')
+      if (inner.type != 'notification')
         return;
     } else {
       return;

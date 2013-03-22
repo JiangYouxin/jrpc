@@ -72,7 +72,6 @@ describe('API test', function() {
       remoteId: 'id1',
       request: inner
     });
-    console.log(data);
     d.onEvent(data);
   });
 });
