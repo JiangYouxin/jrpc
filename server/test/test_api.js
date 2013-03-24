@@ -74,4 +74,38 @@ describe('API test', function() {
     });
     d.onEvent(data);
   });
+
+  it('onEvent-request', function(done) {
+    var d = {
+      send: function(data, fn) {
+        var obj = jrs.deserialize(data);
+        assert.equal(obj.type, 'notification');
+        assert.equal(obj.payload.method, 'response');
+        assert.equal(obj.payload.params.peerId, 'id1');
+        assert.equal(obj.payload.params.remoteId, 'id2');
+        assert.equal(obj.payload.params.id, 1);
+        var inner = jrs.deserializeObject(obj.payload.params.response);
+        assert.equal(inner.type, 'success');
+        assert.equal(inner.payload.result, 'goods');
+        done();
+      }
+    };
+    var api = new Api('id1', d);
+    api.register('call', function(remoteId, params) {
+      assert.equal(remoteId, 'id2');
+      assert.equal(params.h, 'baby');
+      return 'goods';
+    });
+
+    var inner = jrs.requestObject(1, 'call', {
+      h: 'baby'
+    });
+    var data = jrs.notification('forward_request', {
+      peerId: 'id2',
+      remoteId: 'id1',
+      id: 1,
+      request: inner
+    });
+    d.onEvent(data);
+  });
 });
