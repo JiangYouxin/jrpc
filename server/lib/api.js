@@ -27,15 +27,26 @@ module.exports = function(peerId, d) {
       remoteId: remoteId,
       request: inner
     });
+
     d.send(req, function(err, result) {
-      if (err)
-        fn(err, null);
-      else {
+      if (!err) {
         var obj = jrs.deserializeObject(result);
-        if (obj.type == 'success')
-          fn(null, obj.payload.result.response.result);
-        else
+        if (obj.type == 'success') {
+          var inner = jrs.deserializeObject(obj.payload.result.response);
+          if (inner.type == 'success') {
+            // success
+            fn(null, inner.payload.result);
+          } else {
+            // remote report error
+            fn(inner.payload.error, null);
+          }
+        } else {
+          // server report error
           fn(obj.payload.error, null);
+        }
+      } else {
+        // network error
+        fn(err, null);
       }
     });
   };
@@ -80,7 +91,10 @@ module.exports = function(peerId, d) {
 
     var fn = _handlers[inner.payload.method];
     if (!fn) {
-      // TODO: method not found
+      reply({
+        code: -32601,
+        message: 'method not found.'
+      }, null);
       return;
     }
     fn(obj.payload.params.peerId, inner.payload.params, reply);

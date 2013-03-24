@@ -53,7 +53,10 @@ function Delegate(peerId, handler) {
       json: function(code, j) {
         if (fn) {
           if (code != 200)
-            fn(code, null);
+            fn({
+              code: code,
+              message: j
+            }, null);
           else
             fn(null, j);
         }
@@ -69,12 +72,44 @@ describe('request', function() {
   var d2 = new Delegate('id2', handler);
   var client2 = new Api('id2', d2);
 
+  client2.register('call', function(peerId, params) {
+    return 'Hello ' + peerId + ':' + params.name;
+  });
+  client2.registerAsync('callerr', function(peerId, params, reply) {
+    reply({
+      code: -32099,
+      message: 'Hello Error!'
+    }, null);
+  });
+
   it('call', function(done) {
-    client2.register('call', function(peerId, params) {
-      return 'Hello ' + peerId + ':' + params.name;
-    });
     client1.request('id2', 'call', { name: 'World' }, function(err, result) {
+      assert.equal(err, null);
       assert.equal(result, 'Hello id1:World');
+      done();
+    });
+  });
+
+  it('remote not found', function(done) {
+    client1.request('id3', 'call', { name: 'World' }, function(err, result) {
+      assert.equal(err.code, -32001);
+      assert.equal(result, null);
+      done();
+    });
+  });
+
+  it('method not found', function(done) {
+    client1.request('id2', 'call2', { name: 'World' }, function(err, result) {
+      assert.equal(err.code, -32601);
+      assert.equal(result, null);
+      done();
+    });
+  });
+
+  it('remote error', function(done) {
+    client1.request('id2', 'callerr', { name: 'World' }, function(err, result) {
+      assert.equal(err.code, -32099);
+      assert.equal(result, null);
       done();
     });
   });
