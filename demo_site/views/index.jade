@@ -33,9 +33,9 @@ block content
       });
 
       $('#call').click(function() {
-        var remoteId = $('#remoteId').text();
+        var remoteId = $('#remoteId').val();
         var params = {
-          data: $('#arg').text()
+          data: $('#arg').val()
         }
         client.request(remoteId, 'myFunc', params, function(err, result) {
           if (err) {
