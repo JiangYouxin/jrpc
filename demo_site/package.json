@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "express": "3.1.0",
+    "jrpc-server": "0.0.1",
     "jade": "*"
   }
 }

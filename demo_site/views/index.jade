@@ -9,8 +9,13 @@ block content
   p
     span RemoteId:
     input#remoteId
+  p
+    span Arg:
+    input#arg
+  p
     button#call Call!
   p#result
+    
   script(type='text/javascript')
     $(function() {
       var peerId = (function(n) {
@@ -21,7 +26,23 @@ block content
         return r;
       })(20);
       $('#peerId').text(peerId);
+      
+      var client = JRPCClient('/jrpc', peerId);
+      client.register('myFunc', function(remoteId, params) {
+        return 'Hello ' + remoteId + ', I am ' + peerId + ':' + params.data;
+      });
+
       $('#call').click(function() {
-        $('#result').text('not support yet');
+        var remoteId = $('#remoteId').text();
+        var params = {
+          data: $('#arg').text()
+        }
+        client.request(remoteId, 'myFunc', params, function(err, result) {
+          if (err) {
+            $('#result').text(err.message);
+          } else {
+            $('#result').text(result);
+          }
+        });
       });
     });

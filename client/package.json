@@ -6,10 +6,10 @@
         "browserify": "2.7.2"
     },
     "scripts": {
-        "prepublish": "browserify lib/client_jquery.js"
+        "prepublish": "browserify lib/client_jquery.js > ../demo_site/public/javascripts/jrpc-client.js"
     },
     "engines": [
         "node >=0.6.x"
-    ],
+    ]
 }
 
