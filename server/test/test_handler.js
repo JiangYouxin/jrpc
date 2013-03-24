@@ -8,7 +8,9 @@ function CheckRes(fn) {
 }
 
 function CheckSseRes(fn) {
-  this.send = fn;
+  this.writeHead = function(header) {
+  };
+  this.write = fn;
 }
 
 function addCloseEvent(obj) {

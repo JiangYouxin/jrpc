@@ -23,9 +23,13 @@ module.exports = function() {
  
   function _handleLongConn(peerId, res) {
     // TODO: timeout & close
-    // TODO: HTTP 200
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Access-Control-Allow-Origin': '*'
+    });
     _longConns[peerId] = function(data) {
-      sse.send(data, res.send);
+      sse.send(data, res.write);
     };
   }
 
@@ -111,13 +115,10 @@ module.exports = function() {
   this.handler = function(req, res, next) {
     var rpcReq;
 
-    if (req.type == 'GET') {
+    if (req.query && req.query.q) {
       rpcReq = jrs.deserialize(req.query.q);
-    } else if (req.type == 'POST') {
-      rpcReq = jrs.deserializeObject(req.body);
     } else {
-      next();
-      return;
+      rpcReq = jrs.deserializeObject(req.body);
     }
 
     if (rpcReq.type == 'request' || rpcReq.type == 'notification') {
