@@ -10,6 +10,8 @@ function CheckRes(fn) {
 function CheckSseRes(fn) {
   this.writeHead = function(header) {
   };
+  this.setHeader = function(key, value) {
+  };
   this.write = fn;
 }
 

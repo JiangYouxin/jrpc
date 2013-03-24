@@ -23,11 +23,11 @@ module.exports = function() {
  
   function _handleLongConn(peerId, res) {
     // TODO: timeout & close
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Access-Control-Allow-Origin': '*'
-    });
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     _longConns[peerId] = function(data) {
       sse.send(data, res.write);
     };

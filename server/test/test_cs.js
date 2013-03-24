@@ -43,6 +43,8 @@ function Delegate(peerId, handler) {
   handler(mockGet(sseReq), {
     writeHead: function(header) {
     },
+    setHeader: function(key, value) {
+    },
     write: function(rawData) {
       var data = sse.parse(rawData);
       self.onEvent(data);
