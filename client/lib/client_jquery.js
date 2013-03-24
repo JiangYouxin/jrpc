@@ -11,10 +11,10 @@ jQuery.JRPCClient = function(uri, peerId, auth) {
         cache: false,
         data: data,
         dataType: 'json',
-        error: function() {
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
           fn({
             code: 500,
-            message: 'xxxx'
+            message: 'server: ' + textStatus
           }, null);
         },
         success: function(data, textStatus) {
