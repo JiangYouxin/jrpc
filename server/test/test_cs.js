@@ -1,6 +1,6 @@
 var Api = require('../lib/api');
 var jrs = require('jsonrpc-serializer');
-var Handler = require('../lib/p2p-rpc');
+var Handler = require('../lib/jrpc');
 var sse = require('../lib/sse');
 var assert = require('assert');
 

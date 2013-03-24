@@ -1,6 +1,6 @@
 var assert = require('assert')
   , jrs = require('jsonrpc-serializer')
-  , Handler = require('../lib/p2p-rpc')
+  , Handler = require('../lib/jrpc')
   , sse = require('../lib/sse');
 
 function CheckRes(fn) {
