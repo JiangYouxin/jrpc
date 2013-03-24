@@ -48,12 +48,9 @@ function Delegate(peerId, handler) {
   });
 
   this.send = function(data, fn) {
-    console.log(data);
     var req = mockPost(JSON.stringify(data));
     handler(req, {
       json: function(code, j) {
-        console.log(code);
-        console.log(j);
         if (fn) {
           if (code != 200)
             fn(code, null);
@@ -80,5 +77,22 @@ describe('request', function() {
       assert.equal(result, 'Hello id1:World');
       done();
     });
+  });
+});
+
+describe('notification', function() {
+  var handler = new Handler().handler;
+  var d1 = new Delegate('id1', handler);
+  var client1 = new Api('id1', d1);
+  var d2 = new Delegate('id2', handler);
+  var client2 = new Api('id2', d2);
+
+  it('call', function(done) {
+    client2.register('call', function(peerId, params) {
+      assert.equal(peerId, 'id1');
+      assert.equal(params.name, 'World');
+      done();
+    });
+    client1.notification('id2', 'call', { name: 'World' });
   });
 });
