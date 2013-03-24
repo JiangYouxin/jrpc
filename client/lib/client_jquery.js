@@ -2,7 +2,7 @@ var Api = require('../../server/lib/api');
 var jrs = require('jsonrpc-serializer');
 var qs = require('querystring');
 
-function JRPCClient(uri, peerId, auth) {
+jQuery.JRPCClient = function(uri, peerId, auth) {
   var d = {
     send: function(data, fn) {
       $.ajax({
@@ -23,9 +23,9 @@ function JRPCClient(uri, peerId, auth) {
       });
     }
   }
-  var client = new Api(d, peerId);
-  var url = uri + '?' + qs.parse({
-    q: jrs.notificationObject('wait_request', {
+  var client = new Api(peerId, d);
+  var url = uri + '?' + qs.stringify({
+    q: jrs.notification('wait_request', {
       peerId: peerId
     })
   });

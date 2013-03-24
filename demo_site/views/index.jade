@@ -27,7 +27,7 @@ block content
       })(20);
       $('#peerId').text(peerId);
       
-      var client = JRPCClient('/jrpc', peerId);
+      var client = $.JRPCClient('/jrpc', peerId);
       client.register('myFunc', function(remoteId, params) {
         return 'Hello ' + remoteId + ', I am ' + peerId + ':' + params.data;
       });
