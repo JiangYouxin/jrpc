@@ -1,6 +1,10 @@
 var jrs = require('jsonrpc-serializer');
 
 module.exports = function(peerId, d) {
+
+  // d.send is function(req, fn)
+  //   req is JSON object
+  //   fn is function(err, result)
   var _handlers = {};
 
   this.register = function(method, fn) {
@@ -46,6 +50,7 @@ module.exports = function(peerId, d) {
     d.send(req);
   };
 
+  // it is responsibility of `d` to keep a `sse long-connection` and callback to `d.onEvent`
   d.onEvent = function(data) {
     var obj = jrs.deserialize(data);
     var inner = jrs.deserializeObject(obj.payload.params.request);
@@ -58,7 +63,7 @@ module.exports = function(peerId, d) {
         var innerReply = err
           ? jrs.errorObject(inner.payload.id, err)
           : jrs.successObject(inner.payload.id, result);
-        var response = jrs.notification('response', {
+        var response = jrs.notificationObject('response', {
           peerId: peerId,
           remoteId: obj.payload.params.peerId,
           id: obj.payload.params.id,

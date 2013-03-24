@@ -78,7 +78,7 @@ describe('API test', function() {
   it('onEvent-request', function(done) {
     var d = {
       send: function(data, fn) {
-        var obj = jrs.deserialize(data);
+        var obj = jrs.deserializeObject(data);
         assert.equal(obj.type, 'notification');
         assert.equal(obj.payload.method, 'response');
         assert.equal(obj.payload.params.peerId, 'id1');
