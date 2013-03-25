@@ -23,13 +23,15 @@ module.exports = function() {
  
   function _handleLongConn(peerId, res) {
     // TODO: timeout & close
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
     _longConns[peerId] = function(data) {
-      sse.send(data, res.write);
+      var rawData = sse.stringify(data);
+      res.write(rawData);
     };
   }
 

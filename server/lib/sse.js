@@ -1,13 +1,18 @@
 // TODO: support message type
 // TODO: support Last-Event-ID
 
-exports.send = function(data, fn) {
+
+exports.stringify = function(data) {
   var lines = data.split('\n');
   var sendData = "";
   for (var i in lines)
     sendData += "data: " + lines[i] + '\n';
   sendData += '\n';
-  fn(sendData);
+  return sendData;
+};
+
+exports.send = function(data, fn) {
+  fn(exports.stringify(data));
 }
 
 // for test only
