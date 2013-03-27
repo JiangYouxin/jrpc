@@ -30,7 +30,9 @@ jQuery.JRPCClient = function(uri, peerId, auth) {
     })
   });
   var es = new EventSource(url);
-  es.addEventListener('message', d.onEvent);
+  es.onmessage = function(e) {
+    d.onEvent(e.data);
+  };
 
   return client;
 }

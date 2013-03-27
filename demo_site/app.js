@@ -20,6 +20,16 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use(function(req, res, next) {
+    var j = res.json;
+    res.json = function(code, data) {
+      res.json = j;
+      res.json(code, data);
+      console.log(code);
+      console.log(JSON.stringify(data));
+    };
+    next();
+  });
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
 });

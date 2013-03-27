@@ -256,12 +256,6 @@ describe('invalid_request', function() {
       remoteId: 'remoteId',
       response: 'response'
     }),
-    jrs.notification('response', {
-      id: '12345',
-      peerId: 'peerId',
-      remoteId: 'remoteId',
-      response: 'response'
-    }),
 
     // bad wait requests
     jrs.request('test_id', 'wait_request', {

@@ -93,8 +93,8 @@ module.exports = function() {
     var remoteId = params.remoteId;
     var peerId = params.peerId;
 
-    if (typeof(id) != 'number') {
-      res.json(403, 'id is not present or not a number');
+    if (typeof(id) != 'number' && typeof(id) != 'string') {
+      res.json(403, 'id is not present or not a number/string: ' + JSON.stringify(params));
       return;
     }
     if (typeof(peerId) != 'string' || typeof(remoteId) != 'string') {
