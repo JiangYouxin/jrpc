@@ -21,20 +21,6 @@ module.exports = function() {
     return _currentId++;
   }
  
-  function _handleLongConn(peerId, res) {
-    // TODO: timeout & close
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
-    });
-    _longConns[peerId] = function(data) {
-      var rawData = sse.stringify(data);
-      res.write(rawData);
-    };
-  }
-
   function _handleRequest(type, data, res) {
     // the json-rpc id used by server & response-side client
     var alId = _nextId();
@@ -125,20 +111,8 @@ module.exports = function() {
 
     if (rpcReq.type == 'request' || rpcReq.type == 'notification') {
       var params = rpcReq.payload.params;
-      if (!_auth(params.peerId, params.authInfo)) {
-        res.json(401, 'auth failed');
-        return;
-      }
 
-      if (rpcReq.payload.method == 'request') {
-        _handleRequest(rpcReq.type, rpcReq.payload, res);
-      } else if (rpcReq.payload.method == 'response') {
-        if (rpcReq.type != 'notification') {
-          res.json(403, 'type is not notification');
-          return;
-        }
-        _handleResponse(params, res);
-      } else if (rpcReq.payload.method == 'wait_request') {
+      if (rpcReq.payload.method == 'wait_request') {
         if (rpcReq.type != 'notification') {
           res.json(403, 'type is not notification');
           return;
@@ -147,7 +121,36 @@ module.exports = function() {
           res.json(403, 'peerId is not present or not a string');
           return;
         }
-        _handleLongConn(params.peerId, res);
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*'
+        });
+        if (!_auth(params.peerId, params.authInfo)) {
+          var data = jrs.errorObject('0', {
+            code: 401,
+            message: "auth failed"
+          });
+          var rawData = sse.stringify(JSON.stringify(data));
+          res.write(rawData);
+        } else {
+          _longConns[params.peerId] = function(data) {
+            var rawData = sse.stringify(data);
+            res.write(rawData);
+          };
+        }
+      } else if (!_auth(params.peerId, params.authInfo)) {
+        res.json(401, 'auth failed');
+        return;
+      } else if (rpcReq.payload.method == 'request') {
+        _handleRequest(rpcReq.type, rpcReq.payload, res);
+      } else if (rpcReq.payload.method == 'response') {
+        if (rpcReq.type != 'notification') {
+          res.json(403, 'type is not notification');
+          return;
+        }
+        _handleResponse(params, res);
       } else {
         res.json(404, 'Not found');
       }

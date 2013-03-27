@@ -18,7 +18,7 @@ describe('API test', function() {
         done();
       }
     };
-    var api = new Api('id1', d);
+    var api = new Api(d, 'id1');
     api.notification('id2', 'call', { param: 'param'});
   });
 
@@ -44,7 +44,7 @@ describe('API test', function() {
         fn(null, reply);
       }
     };
-    var api = new Api('id1', d);
+    var api = new Api(d, 'id1');
     api.request('id2', 'call', { param: 'param'}, function(err, result) {
       assert.equal(result, 'haha');
       done();
@@ -54,25 +54,25 @@ describe('API test', function() {
   it('onEvent-notification', function(done) {
     var d = {
       send: function(data, fn) {
+      },
+      connectLong: function(fn) {
+        var inner = jrs.notificationObject('call', {
+          h: 'baby'
+        });
+        var data = jrs.notification('forward_notification', {
+          peerId: 'id2',
+          remoteId: 'id1',
+          request: inner
+        });
+        fn(data);
       }
     };
-    var api = new Api('id1', d);
+    var api = new Api(d, 'id1');
     api.register('call', function(remoteId, params) {
       assert.equal(remoteId, 'id2');
       assert.equal(params.h, 'baby');
       done();
-      return 'goods';
     });
-
-    var inner = jrs.notificationObject('call', {
-      h: 'baby'
-    });
-    var data = jrs.notification('forward_notification', {
-      peerId: 'id2',
-      remoteId: 'id1',
-      request: inner
-    });
-    d.onEvent(data);
   });
 
   it('onEvent-request', function(done) {
@@ -89,25 +89,26 @@ describe('API test', function() {
         assert.equal(inner.payload.id, 1);
         assert.equal(inner.payload.result, 'goods');
         done();
+      },
+      connectLong: function(fn) {
+        var inner = jrs.requestObject(1, 'call', {
+          h: 'baby'
+        });
+        var data = jrs.notification('forward_request', {
+          peerId: 'id2',
+          remoteId: 'id1',
+          id: 3333,
+          request: inner
+        });
+        fn(data);
       }
     };
-    var api = new Api('id1', d);
+    var api = new Api(d, 'id1');
     api.register('call', function(remoteId, params) {
       assert.equal(remoteId, 'id2');
       assert.equal(params.h, 'baby');
       return 'goods';
     });
-
-    var inner = jrs.requestObject(1, 'call', {
-      h: 'baby'
-    });
-    var data = jrs.notification('forward_request', {
-      peerId: 'id2',
-      remoteId: 'id1',
-      id: 3333,
-      request: inner
-    });
-    d.onEvent(data);
   });
 
   it('onEvent-request: method not found', function(done) {
@@ -124,24 +125,25 @@ describe('API test', function() {
         assert.equal(inner.payload.id, 1);
         assert.equal(inner.payload.error.code, -32601);
         done();
+      },
+      connectLong: function(fn) {
+        var inner = jrs.requestObject(1, 'call2', {
+          h: 'baby'
+        });
+        var data = jrs.notification('forward_request', {
+          peerId: 'id2',
+          remoteId: 'id1',
+          id: 3333,
+          request: inner
+        });
+        fn(data);
       }
     };
-    var api = new Api('id1', d);
+    var api = new Api(d, 'id1');
     api.register('call', function(remoteId, params) {
       assert.equal(remoteId, 'id2');
       assert.equal(params.h, 'baby');
       return 'goods';
     });
-
-    var inner = jrs.requestObject(1, 'call2', {
-      h: 'baby'
-    });
-    var data = jrs.notification('forward_request', {
-      peerId: 'id2',
-      remoteId: 'id1',
-      id: 3333,
-      request: inner
-    });
-    d.onEvent(data);
   });
 });

@@ -5,6 +5,14 @@ var assert = require('assert')
 
 function CheckRes(fn) {
   this.json = fn;
+  this.writeHead = function(header) {
+  };
+  this.write = function(data) {
+    var da = sse.parse(data);
+    var obj = jrs.deserialize(da);
+    if (obj.type == 'error')
+      fn(obj.payload.error.code, obj.payload.error.message);
+  };
 }
 
 function CheckSseRes(fn) {

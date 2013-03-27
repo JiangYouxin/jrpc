@@ -40,16 +40,17 @@ function Delegate(peerId, handler) {
   var sseReq = jrs.notification('wait_request', {
     peerId: peerId
   });
-  handler(mockGet(sseReq), {
-    writeHead: function(header) {
-    },
-    setHeader: function(key, value) {
-    },
-    write: function(rawData) {
-      var data = sse.parse(rawData);
-      self.onEvent(data);
-    }
-  });
+
+  this.connectLong = function(fn) {
+    handler(mockGet(sseReq), {
+      writeHead: function(header) {
+      },
+      write: function(rawData) {
+        var data = sse.parse(rawData);
+        fn(data);
+      }
+    });
+  };
 
   this.send = function(data, fn) {
     var req = mockPost(JSON.stringify(data));
@@ -72,9 +73,9 @@ function Delegate(peerId, handler) {
 describe('request', function() {
   var handler = new Handler().handler;
   var d1 = new Delegate('id1', handler);
-  var client1 = new Api('id1', d1);
+  var client1 = new Api(d1, 'id1');
   var d2 = new Delegate('id2', handler);
-  var client2 = new Api('id2', d2);
+  var client2 = new Api(d2, 'id2');
 
   client2.register('call', function(peerId, params) {
     return 'Hello ' + peerId + ':' + params.name;
@@ -122,9 +123,9 @@ describe('request', function() {
 describe('notification', function() {
   var handler = new Handler().handler;
   var d1 = new Delegate('id1', handler);
-  var client1 = new Api('id1', d1);
+  var client1 = new Api(d1, 'id1');
   var d2 = new Delegate('id2', handler);
-  var client2 = new Api('id2', d2);
+  var client2 = new Api(d2, 'id2');
 
   it('call', function(done) {
     client2.register('call', function(peerId, params) {
@@ -133,5 +134,28 @@ describe('notification', function() {
       done();
     });
     client1.notification('id2', 'call', { name: 'World' });
+  });
+});
+
+describe('auth', function() {
+  var handler = new Handler().auth(function(peerId, auth) {
+    return peerId == auth;
+  }).handler;
+  var d = new Delegate('id1', handler);
+  var client = new Api(d, 'id1');
+
+  it('auth failed', function(done) {
+    var count = 3;
+    client.setAuth('id11', function() {
+      count--;
+      if (count == 0)
+        done();
+    });
+    client.request('id2', 'call', { name: 'World' }, function(err, result) {
+    });
+    client.notification('id2', 'call', { name: 'World' });
+    client.register('callme', function(peerId, params) {
+      return 0;
+    });
   });
 });

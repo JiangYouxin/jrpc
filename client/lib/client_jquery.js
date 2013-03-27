@@ -23,11 +23,12 @@ jQuery.JRPCClient = function(uri, peerId, auth) {
       });
     }
   }
-  var client = new Api(peerId, d);
+  var client = new Api(d, peerId, auth);
+  var p = { peerId: peerId };
+  if (auth)
+    p.auth = auth;
   var url = uri + '?' + qs.stringify({
-    q: jrs.notification('wait_request', {
-      peerId: peerId
-    })
+    q: jrs.notification('wait_request', p)
   });
   var es = new EventSource(url);
   es.onmessage = function(e) {
