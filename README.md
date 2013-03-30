@@ -38,7 +38,14 @@ Client B:
     jrpc = $.JRPCClient('/jrpc', 'idB');
     jrpc.notification('idA', 'funcName2', { extra: 'hello world' });
 
-## Browser client API
+## Browser-side API
+
+The browser-side library acts as a plugin of `jQuery`.
+
+You can go through the `client` directory of the repo, and run `npm install` to generate the library named `jrpc-client.js`.  Then put some code like this in your .HTML file:
+
+    <script type="text/javascript" src="/javascripts/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="/javascripts/jrpc-client.js">
 
 ### jrpc = $.JRPCClient(uri, peerId)
 
@@ -147,3 +154,15 @@ You can register to jrpc server a auth callback, which will be called while one 
 ## Demo Sites
 
 You can go through the *demo_site* directory of the repo.
+
+## LICENSE
+
+(The MIT License)
+
+Copyright (c) 2013 JiangYouxin <jiangyouxin9@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
