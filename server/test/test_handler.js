@@ -26,11 +26,11 @@ function CheckSseRes(fn) {
 function addCloseEvent(obj) {
   obj.on = function(e, fn) {
     if (e == 'close')
-      this.fn = fn;
+      obj.fn = fn;
   };
   obj.disConn = function() {
     if (this.fn)
-      this.fn();
+      obj.fn();
   };
 }
 
@@ -176,6 +176,83 @@ describe('simple-rpc-call', function() {
     });
   });
 });
+
+describe('disconnect request', function() {
+  var handler = new Handler().handler;
+
+  it('', function(done) {
+    // peerId: id2, recv request & send response
+    var longReq = jrs.notification('wait_request', {
+      peerId: 'id2'
+    });
+    handler(mockGet(longReq), new CheckSseRes(function(data) {
+      var obj = jrs.deserialize(sse.parse(data));
+      assert.equal(obj.type, 'notification');
+      assert.equal(obj.payload.method, 'forward_request');
+      assert.equal(obj.payload.params.peerId, 'id1');
+      assert.equal(obj.payload.params.remoteId, 'id2');
+      assert.equal(obj.payload.params.request, 'Hello World!');
+      var res = jrs.notification('response', {
+        peerId: 'id2',
+        remoteId: 'id1',
+        id: obj.payload.params.id,
+        response: 'Hello Sb!'
+      });
+      handler(mockPost(res), new CheckRes(function(code, data) {
+        assert.equal(code, 200);
+        var obj = jrs.deserializeObject(data);
+        assert.equal(obj.type, 'notification');
+        assert.equal(obj.payload.method, 'responseFailed');
+        done();
+      }));
+    }));
+
+    // peerId: id1, send request & recv response
+    var r = jrs.request('test_id', 'request', {
+      peerId: 'id1',
+      remoteId: 'id2',
+      request: 'Hello World!'
+    });
+
+    var req = mockPost(r);
+    handler(req, new CheckRes(function(code, data) {
+      assert.ok(false);
+    }));
+    req.disConn();
+  });
+});
+
+describe('disconnect long connection', function() {
+  var handler = new Handler().handler;
+
+  it('', function(done) {
+    // peerId: id2, recv request & send response
+    var longReq = jrs.notification('wait_request', {
+      peerId: 'id2'
+    });
+    var req = mockGet(longReq);
+    handler(req, new CheckSseRes(function(data) {
+      assert.ok(false);
+    }));
+    req.disConn();
+
+    // peerId: id1, send request & recv response
+    var r = jrs.request('test_id', 'request', {
+      peerId: 'id1',
+      remoteId: 'id2',
+      request: 'Hello World!'
+    });
+    handler(mockPost(r), new CheckRes(function(code, data) {
+      assert.equal(code, 200);
+      var obj = jrs.deserializeObject(data);
+      assert.equal(obj.type, 'error');
+      assert.equal(obj.payload.id, 'test_id');
+      assert.equal(obj.payload.error.code, '-32001');
+      done();
+    }));
+  });
+});
+
 
 describe('invalid_request', function() {
   var handler = new Handler().handler;

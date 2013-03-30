@@ -21,7 +21,7 @@ module.exports = function() {
     return _currentId++;
   }
  
-  function _handleRequest(type, data, res) {
+  function _handleRequest(type, data, req, res) {
     // the json-rpc id used by server & response-side client
     var alId = _nextId();
     // the peerId of request-side client;
@@ -48,7 +48,6 @@ module.exports = function() {
     }
 
     // reply to peerId
-    // TODO: timeout
     if (type == 'request') {
       _requests[alId] = {
         peerId: peerId,
@@ -61,6 +60,9 @@ module.exports = function() {
           }));
         }
       };
+      req.on('close', function() {
+        delete _requests[alId];
+      });
     } else {
       res.json(200, jrs.notificationObject('notificationSuccess'));
     }
@@ -88,16 +90,18 @@ module.exports = function() {
       return;
     }
 
-    var h = _requests[params.id];
+    process.nextTick(function() {
+      var h = _requests[params.id];
 
-    if (h && h.remoteId == params.peerId && h.peerId == params.remoteId) {
-      delete _requests[params.id];
-      // forward response to remoteId
-      h.fn(params.response);
-      res.json(200, jrs.notificationObject('responseSuccess'));
-    } else {
-      res.json(200, jrs.notificationObject('responseFailed'));
-    } 
+      if (h && h.remoteId == params.peerId && h.peerId == params.remoteId) {
+        delete _requests[params.id];
+        // forward response to remoteId
+        h.fn(params.response);
+        res.json(200, jrs.notificationObject('responseSuccess'));
+      } else {
+        res.json(200, jrs.notificationObject('responseFailed'));
+      }
+    }); 
   }
 
   this.handler = function(req, res, next) {
@@ -139,12 +143,15 @@ module.exports = function() {
             var rawData = sse.stringify(data);
             res.write(rawData);
           };
+          req.on('close', function() {
+            delete _longConns[params.peerId];
+          });
         }
       } else if (!_auth(params.peerId, params.authInfo)) {
         res.json(401, 'auth failed');
         return;
       } else if (rpcReq.payload.method == 'request') {
-        _handleRequest(rpcReq.type, rpcReq.payload, res);
+        _handleRequest(rpcReq.type, rpcReq.payload, req, res);
       } else if (rpcReq.payload.method == 'response') {
         if (rpcReq.type != 'notification') {
           res.json(403, 'type is not notification');
