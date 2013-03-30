@@ -44,18 +44,15 @@ Client B:
 
 Create a jrpc client.
 
-`uri` is the uri that a jrpc server is running on. See *jrpc-server* below.
-
+`uri` is the uri that a jrpc server is running on. See *jrpc-server* below.  
 `peerId` is id for the current client.
 
     jrpc = $.JRPCClient('/jrpc', 'someId');
 
 ### jrpc.register(name, fn)
 
-Register `fn` as a function named `name`, which will be called when a request or a notification is received.
-
-The caller's peerId, and params of a request or a notification, will be passed to `fn` as arguments.
-
+Register `fn` as a *handler function* named `name`, which will be called when a request or a notification is received.  
+The caller's peerId, and params of a request or a notification, will be passed to `fn` as arguments.  
 The return value of `fn` will be used as the response when handling a request, or discard when handling a notification.
 
     jrpc.register('add', function(peerId, params) {
@@ -68,7 +65,7 @@ The return value of `fn` will be used as the response when handling a request, o
 
 ### jrpc.registerAsync(name, fn)
 
-Register an asynchronous function.
+Register an asynchronous handler function.
 
     jrpc.registerAsync('div', function(peerId, params, reply) {
       if (!params.b)
@@ -79,14 +76,10 @@ Register an asynchronous function.
 
 ### jrpc.request(peerId, name, params, fn)
 
-Send a request and waiting for a response.
-
-`peerId`: the id of the client that handles the request
-
-`name`: the name of the remote function
-
-`params`: the params that will be passed to the remote function
-
+Send a request and waiting for a response.  
+`peerId`: the id of the client that handles the request  
+`name`: the name of the remote function  
+`params`: the params that will be passed to the remote function  
 `fn`: a callback function that will be called when a response arrives or an error occurs
 
     jrpc.request('someId', 'div', { a: 9, b: 3 }, function(err, result) {
@@ -100,10 +93,8 @@ Send a request and waiting for a response.
 
 Send a notifiction.
 
-`peerId`: the id of the client that handles the request
-
-`name`: the name of the remote function
-
+`peerId`: the id of the client that handles the request  
+`name`: the name of the remote function  
 `params`: the params that will be passed to the remote function
 
     jrpc.notification('someId', 'hello', { arg: 'hahahaha' });
@@ -126,21 +117,33 @@ See `jprc-server` below for more about auth.
 
 ## jrpc-server
 
-`jrpc-server` 
+`jrpc-server` is a forward server running on `node.js`.
+
+It enables browser clients to communicate with each other.
+
+You can install `jrpc-server` with `npm`:
 
     npm install jrpc-server
 
-### Usage
+### Used with express
 
-    var handler = require('jrpc-server').handler;
+    var JRPC = require('jrpc-server');
+    var handler = new JRPC().handler;
+
+    // here app is the application object of express
     app.all('/jrpc', handler);
 
-### Auth support
+### Auth support (Optional)
 
-    var handler = require('jrpc-server').auth(function(peerId, auth) {
+You can register to jrpc server a auth callback, which will be called while one client wants to send a request/notifiction to another, or register a handler function. All the operations by a client will be prevented if the callback returns false.
+
+    var JRPC = require('jrpc-server');
+    var handler = new JRPC().auth(function(peerId, authInfo) {
       return true;
       // return false;
     }).handler;
     app.all('/jrpc', handler);
 
 ## Demo Sites
+
+You can go through the *demo_site* directory of the repo.
