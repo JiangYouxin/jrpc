@@ -1,12 +1,12 @@
-developing...
-
 # jrpc
 
-`jrpc` is a library that enables you to perform a RPC from one client(e.g. browser) to another via a forward server.
+`jrpc` enables you to perform RPCs between different clients(e.g. browsers) via a forward server.
 
 ## Code Examples
 
-### Send a Request
+### A request
+
+Client B send a *request* to client A, and wait for the response from A.
 
 Client A:
 
@@ -22,7 +22,9 @@ Client B:
       alert(result); // will output "Hello idB, how are you?" if idA is online.
     });
 
-### Send a Notification
+### A notification
+
+Client B send a *notification* to client A, without waiting for anything from A.
 
 Client A:
 
@@ -38,12 +40,23 @@ Client B:
 
 ## Browser client API
 
-### jrpc = $.JRPCClient(uri, peerId, [auth])
+### jrpc = $.JRPCClient(uri, peerId)
+
+Create a jrpc client.
+
+`uri` is the uri that a jrpc server is running on. See *jrpc-server* below.
+
+`peerId` is id for the current client.
 
     jrpc = $.JRPCClient('/jrpc', 'someId');
-    jrpc = $.JRPCClient('/jrpc', 'myId', 'a1b2c3d4');
 
 ### jrpc.register(name, fn)
+
+Register `fn` as a function named `name`, which will be called when a request or a notification is received.
+
+The caller's peerId, and params of a request or a notification, will be passed to `fn` as arguments.
+
+The return value of `fn` will be used as the response when handling a request, or discard when handling a notification.
 
     jrpc.register('add', function(peerId, params) {
       return params.a + params.b;
@@ -55,6 +68,8 @@ Client B:
 
 ### jrpc.registerAsync(name, fn)
 
+Register an asynchronous function.
+
     jrpc.registerAsync('div', function(peerId, params, reply) {
       if (!params.b)
         reply({ code: -32098, message: "b=0!" }, null);
@@ -63,6 +78,16 @@ Client B:
     });
 
 ### jrpc.request(peerId, name, params, fn)
+
+Send a request and waiting for a response.
+
+`peerId`: the id of the client that handles the request
+
+`name`: the name of the remote function
+
+`params`: the params that will be passed to the remote function
+
+`fn`: a callback function that will be called when a response arrives or an error occurs
 
     jrpc.request('someId', 'div', { a: 9, b: 3 }, function(err, result) {
       if (err)
@@ -73,14 +98,44 @@ Client B:
 
 ### jrpc.notification(peerId, name, params)
 
+Send a notifiction.
+
+`peerId`: the id of the client that handles the request
+
+`name`: the name of the remote function
+
+`params`: the params that will be passed to the remote function
+
     jrpc.notification('someId', 'hello', { arg: 'hahahaha' });
+
+### jrpc.auth(authInfo, fn)
+
+Set `authInfo` to the jrpc client. Must be called before any other methods.
+
+`fn` will be called when auth failed, just after:
+
+* First time `register` or `registerAsync` is called
+
+* Every times `request` or `notification` is called
+
+See `jprc-server` below for more about auth.
+
+    jrpc.auth('authInfo', function() {
+      alert('auth failed!');
+    });
 
 ## jrpc-server
 
+`jrpc-server` 
+
     npm install jrpc-server
+
+### Usage
 
     var handler = require('jrpc-server').handler;
     app.all('/jrpc', handler);
+
+### Auth support
 
     var handler = require('jrpc-server').auth(function(peerId, auth) {
       return true;
