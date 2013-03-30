@@ -21,19 +21,21 @@ jQuery.JRPCClient = function(uri, peerId, auth) {
           fn(null, data);
         }
       });
+    },
+    connectLong: function(fn) {
+      var p = { peerId: peerId };
+      if (auth)
+        p.auth = auth;
+      var url = uri + '?' + qs.stringify({
+        q: jrs.notification('wait_request', p)
+      });
+      var es = new EventSource(url);
+      es.onmessage = function(e) {
+        fn(e.data);
+      };
     }
   }
   var client = new Api(d, peerId, auth);
-  var p = { peerId: peerId };
-  if (auth)
-    p.auth = auth;
-  var url = uri + '?' + qs.stringify({
-    q: jrs.notification('wait_request', p)
-  });
-  var es = new EventSource(url);
-  es.onmessage = function(e) {
-    d.onEvent(e.data);
-  };
 
   return client;
 }
